@@ -1,4 +1,6 @@
+import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @ObservedObject var appState: AppState
@@ -100,6 +102,20 @@ struct SettingsView: View {
                     .toggleStyle(.switch)
 
                 Spacer()
+
+                Button {
+                    importSettings()
+                } label: {
+                    Label("Import", systemImage: "square.and.arrow.down")
+                }
+                .help("Import commands from a backup file")
+
+                Button {
+                    exportSettings()
+                } label: {
+                    Label("Export", systemImage: "square.and.arrow.up")
+                }
+                .help("Export commands to a backup file")
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -125,6 +141,10 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private var exportContentType: UTType {
+        UTType(filenameExtension: "json") ?? .json
     }
 
     private func commandEditor(for id: UUID) -> some View {
@@ -177,6 +197,65 @@ struct SettingsView: View {
         } set: { content in
             appState.updateCommandContent(id: id, content: content)
         }
+    }
+
+    private func exportSettings() {
+        let savePanel = NSSavePanel()
+        savePanel.title = "Export AnyCmd Commands"
+        savePanel.nameFieldStringValue = "AnyCmd-\(Self.exportDateString()).anycmd.json"
+        savePanel.allowedContentTypes = [exportContentType]
+        savePanel.canCreateDirectories = true
+
+        guard savePanel.runModal() == .OK, let url = savePanel.url else {
+            return
+        }
+
+        do {
+            try appState.exportSettings(to: url)
+        } catch {
+            showAlert(
+                title: "Export Failed",
+                message: error.localizedDescription
+            )
+        }
+    }
+
+    private func importSettings() {
+        let openPanel = NSOpenPanel()
+        openPanel.title = "Import AnyCmd Commands"
+        openPanel.allowedContentTypes = [exportContentType]
+        openPanel.allowsMultipleSelection = false
+        openPanel.canChooseDirectories = false
+        openPanel.canChooseFiles = true
+
+        guard openPanel.runModal() == .OK, let url = openPanel.url else {
+            return
+        }
+
+        do {
+            try appState.importSettings(from: url)
+            selectedCommandID = appState.settings.commands.first?.id
+        } catch {
+            showAlert(
+                title: "Import Failed",
+                message: error.localizedDescription
+            )
+        }
+    }
+
+    private func showAlert(title: String, message: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
+    private static func exportDateString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: Date())
     }
 
     private func deleteSelectedCommand() {

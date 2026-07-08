@@ -63,6 +63,37 @@ final class AppState: ObservableObject {
         settings.commands[index].content = content
     }
 
+    func exportSettings(to url: URL) throws {
+        let exportFile = AnyCmdExportFile(settings: settings)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(exportFile)
+        try data.write(to: url, options: .atomic)
+    }
+
+    func importSettings(from url: URL) throws {
+        let data = try Data(contentsOf: url)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        if let exportFile = try? decoder.decode(AnyCmdExportFile.self, from: data),
+           exportFile.app == "AnyCmd",
+           exportFile.version <= AnyCmdExportFile.currentVersion
+        {
+            settings = Self.migratedSettings(exportFile.settings)
+            return
+        }
+
+        // Accept raw AppSettings JSON as a fallback for early/manual backups.
+        if let importedSettings = try? decoder.decode(AppSettings.self, from: data) {
+            settings = Self.migratedSettings(importedSettings)
+            return
+        }
+
+        throw ImportExportError.unsupportedFile
+    }
+
     private let userDefaults: UserDefaults
 
     private func save() {

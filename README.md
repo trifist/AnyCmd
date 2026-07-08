@@ -10,7 +10,14 @@ AnyCmd 是一个 macOS 菜单栏应用，用来保存和快速复制常用 AI co
 - 快捷键呼出 command 选择面板。
 - 点击 command 后将内容复制到系统剪贴板。
 - 设置窗口支持新增、编辑、删除 command，并配置快捷键。
+- 设置窗口支持导入/导出 `.anycmd.json` 备份文件。
 - 自带 macOS app icon。
+
+## 导入导出
+
+Settings 里可以导出当前配置到 `.anycmd.json` 文件，也可以在另一台 Mac 上导入这个文件恢复 command、enable 状态和快捷键。
+
+导出文件是带版本号的 JSON，方便人工检查，也方便后续格式升级。
 
 ## 开发运行
 
