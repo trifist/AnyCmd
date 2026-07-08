@@ -79,6 +79,7 @@ mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
 
 cp "$ROOT_DIR/Info.plist" "$APP_DIR/Contents/Info.plist"
 cp "$BIN_DIR/AnyCmd" "$APP_DIR/Contents/MacOS/AnyCmd"
+cp "$ROOT_DIR/Resources/AppIcon.icns" "$APP_DIR/Contents/Resources/AppIcon.icns"
 
 echo "Built $APP_DIR"
 if [[ "$ENABLE_LOGGING" == "1" ]]; then
