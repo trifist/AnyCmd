@@ -16,7 +16,8 @@ final class CommandPanelController {
         lastPresentationDate = now
 
         if let panel, panel.isVisible {
-            AppLogger.info("Command panel already visible; bringing it to front")
+            AppLogger.info("Command panel already visible; refreshing content and bringing it to front")
+            configure(panel: panel, commands: commands)
             panel.orderFrontRegardless()
             panel.makeKeyAndOrderFront(nil)
             return
@@ -45,6 +46,26 @@ final class CommandPanelController {
         panel.hasShadow = true
         panel.backgroundColor = .clear
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
+        panel.onClose = { [weak self, weak panel] in
+            guard let self, self.panel === panel else {
+                return
+            }
+            self.panel = nil
+        }
+        configure(panel: panel, commands: commands, screen: screen)
+
+        self.panel = panel
+
+        NSApp.activate(ignoringOtherApps: true)
+        panel.orderFrontRegardless()
+        panel.makeKeyAndOrderFront(nil)
+        AppLogger.info("Command panel ordered front; isVisible=\(panel.isVisible), frame=\(panel.frame)")
+    }
+
+    private func configure(panel: CommandPanelWindow, commands: [CommandPreset], screen: NSScreen? = nil) {
+        let screen = screen ?? screenForPanel()
+        let size = panelSize(commandCount: commands.count, screen: screen)
+        let origin = origin(for: size, screen: screen)
         let hostingView = NSHostingView(
             rootView: CommandPickerView(commands: commands) { [weak self] command in
                 Self.copyToPasteboard(command.content)
@@ -57,13 +78,7 @@ final class CommandPanelController {
         hostingView.autoresizingMask = [.width, .height]
         panel.contentView = hostingView
         panel.setFrame(NSRect(origin: origin, size: size), display: true)
-
-        self.panel = panel
-
-        NSApp.activate(ignoringOtherApps: true)
-        panel.orderFrontRegardless()
-        panel.makeKeyAndOrderFront(nil)
-        AppLogger.info("Command panel ordered front; isVisible=\(panel.isVisible), frame=\(panel.frame), contentFrame=\(hostingView.frame)")
+        AppLogger.info("Configured command panel with \(commands.count) command(s); frame=\(panel.frame), contentFrame=\(hostingView.frame)")
     }
 
     private func panelSize(commandCount: Int, screen: NSScreen) -> NSSize {
@@ -101,6 +116,8 @@ final class CommandPanelController {
 }
 
 final class CommandPanelWindow: NSPanel {
+    var onClose: (() -> Void)?
+
     override var canBecomeKey: Bool {
         true
     }
@@ -116,6 +133,11 @@ final class CommandPanelWindow: NSPanel {
         }
 
         super.keyDown(with: event)
+    }
+
+    override func close() {
+        super.close()
+        onClose?()
     }
 }
 
