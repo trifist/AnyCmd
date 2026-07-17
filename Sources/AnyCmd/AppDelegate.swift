@@ -115,6 +115,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.autoenablesItems = false
 
+        let aboutItem = NSMenuItem(
+            title: "About AnyCmd",
+            action: #selector(openAbout),
+            keyEquivalent: ""
+        )
+        aboutItem.target = self
+        menu.addItem(aboutItem)
+
+        menu.addItem(.separator())
+
         let enableMenuItem = NSMenuItem(
             title: "Enable AnyCmd",
             action: #selector(toggleEnabled),
@@ -180,6 +190,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func toggleEnabled() {
         appState.settings.enabled.toggle()
+    }
+
+    @objc private func openAbout() {
+        NSApp.activate(ignoringOtherApps: true)
+        NSApp.orderFrontStandardAboutPanel(nil)
     }
 
     @objc private func openSettings() {

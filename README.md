@@ -5,7 +5,7 @@ AnyCmd 是一个 macOS 菜单栏应用，用来保存和快速复制常用 AI co
 ## 功能
 
 - 只显示菜单栏图标，不显示 Dock 图标。
-- 菜单栏提供 Enable、Settings 和 Quit。
+- 菜单栏提供 About、Enable、Settings 和 Quit。
 - 默认全局快捷键为 `Option + Q`。
 - 快捷键呼出 command 选择面板。
 - 点击 command 后将内容复制到系统剪贴板。
@@ -26,6 +26,17 @@ swift run
 ```
 
 ## 打包为菜单栏 App
+
+发布前在 `Config/AppVersion.plist` 修改版本信息：
+
+```xml
+<key>appName</key>
+<string>AnyCmd</string>
+<key>version</key>
+<string>1.0.1</string>
+```
+
+`version` 是用户看到的发布版本号。构建号不需要配置，构建脚本会按本机时间自动生成 `YYMMDD.HHmm` 格式，例如 `260717.1103` 表示 2026 年 7 月 17 日 11:03。脚本会把版本信息写入 App，并在构建完成后打印实际版本。
 
 默认构建无日志发布包：
 
