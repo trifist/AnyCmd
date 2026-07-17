@@ -18,6 +18,7 @@ final class CommandPanelController {
         if let panel, panel.isVisible {
             AppLogger.info("Command panel already visible; refreshing content and bringing it to front")
             configure(panel: panel, commands: commands)
+            NSApp.activate(ignoringOtherApps: true)
             panel.orderFrontRegardless()
             panel.makeKeyAndOrderFront(nil)
             return
@@ -117,6 +118,7 @@ final class CommandPanelController {
 
 final class CommandPanelWindow: NSPanel {
     var onClose: (() -> Void)?
+    private var isClosing = false
 
     override var canBecomeKey: Bool {
         true
@@ -135,7 +137,22 @@ final class CommandPanelWindow: NSPanel {
         super.keyDown(with: event)
     }
 
+    override func resignKey() {
+        super.resignKey()
+
+        guard !isClosing else {
+            return
+        }
+
+        close()
+    }
+
     override func close() {
+        guard !isClosing else {
+            return
+        }
+
+        isClosing = true
         super.close()
         onClose?()
     }
